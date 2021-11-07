@@ -4,4 +4,5 @@ Framing-Datasheet.csv
 Lei_Gong_climate_media.csv
 states_abbreviation.csv
 test.csv
-Start_up
+Start_up/
+venv/
