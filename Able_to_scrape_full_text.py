@@ -26,8 +26,8 @@ def login_to_proquest(driver,web_link):
     driver.get(web_link)
 
     # login to boiler account
-    username = "" # input your username here
-    password = "" + duo  # input your password here
+    username = "zhan3447" # input your username here
+    password = "0107," + duo  # input your password here
     driver.find_element_by_name("username").send_keys(username)
     driver.find_element_by_name("password").send_keys(password)
     driver.find_element_by_name("submit").click()
@@ -37,7 +37,7 @@ def login_to_proquest(driver,web_link):
 
 def make_sure_in_full_text_url(driver):
     html1 = driver.page_source
-    soup1 = BeautifulSoup(html1, "html.parser ")
+    soup1 = BeautifulSoup(html1, "html.parser")
     # we assume the full text tab is the first tag we find
     tag = soup1.find("li", id="tab-Fulltext-null")
     # if given attribute is false
@@ -88,8 +88,8 @@ def driver_setup():
     driver = webdriver.Chrome("/Users/zhangyuke/PycharmProjects/Climate_Media_beautifulsoup/chromedriver_v94")
     driver.set_page_load_timeout(60)
     web_link = "https://www.proquest.com/usnews/advanced?accountid=13360"
-    #login_to_proquest(driver, web_link) # without login
-    after_login_url = web_link
+    after_login_url = login_to_proquest(driver, web_link)
+    #after_login_url = web_link
     return driver
 
 def add_info(row, df, article):
@@ -217,17 +217,59 @@ def main_by_state(current_state):
         # quit current driver
         driver.quit()
 
+def main_by_link(filename):
+    # read document url from my dataset new_climate_media.csv
+    df = pd.read_csv(filename,index_col=False)
 
+
+    full_text_urls = df["article_link"].tolist()
+
+    # initialize value
+    row = 40
+    gap = 40  # Since a duo code only valid for 40 articles, further the account has been logged out
+    low, high = row, row + gap
+    length = len(df)
+    print("Total length is: "+ str(length))
+
+    while (row < length):
+        df1 = pd.DataFrame(columns=["article"])
+        # login every 40 articles
+        driver = driver_setup()
+
+        while (low <= row < high and row < length):
+            url = full_text_urls[row]
+            print(row)
+            print(url)
+            article = Full_text_scraping(driver, url)
+            print(article)
+            article = adjust_storing_article_format(article)
+            #articles.append(article)
+            df1 = add_info(row, df1, article)
+            # update row
+            row += 1
+
+        print("row: " + str(row) + " (" + str(low) + ", " + str(high) + ")")
+        path = "/Users/zhangyuke/PycharmProjects/Climate_Media_beautifulsoup/"
+        # append info of 40 articles to the file
+        df1.to_csv(f"{path}hand_coded_full_text.csv", mode='a', header=False)
+
+        # update lower and upper bound
+        low += gap
+        high += gap
+        # quit current driver
+        driver.quit()
 def test():
     driver = driver_setup()
     url = "https://www.proquest.com/docview/268298662?accountid=13360"
     Full_text_scraping(driver, url)
 
 #test()
-main_by_state("NY")
+#filename = "/Users/zhangyuke/PycharmProjects/Climate_Media_beautifulsoup/hand_coded_articles/hand_coded_article_links.csv"
+#main_by_link(filename)
+
 
 
 # there are
-# CA(799) pdf get it manually please
+# CA(799) pdf get it manually please not yet
 #
 
